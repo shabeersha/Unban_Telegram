@@ -1,12 +1,13 @@
 const { Api, TelegramClient } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 const input = require("input"); // npm i input
-let fs = require('fs');
-let cron = require('node-cron');
 require('dotenv').config();
 
 
 
+let totalParticipants;
+let n=0;
+let userIds=[];
 const apiId = parseInt(process.env.APIID);
 const apiHash = process.env.APIHASH;
 const stringSession = new StringSession(process.env.SESSIONKEY); // fill this later with the value from session.save()
@@ -31,43 +32,65 @@ const stringSession = new StringSession(process.env.SESSIONKEY); // fill this la
 
   let kicked = await client.invoke(
     new Api.channels.GetParticipants({
-      channel: "-1001539705455",
+      channel: process.env.GROUPID,
       filter: new Api.ChannelParticipantsKicked({ q: "" }),
       offset: 43,
-      limit: 1000,
+      limit: 200,
       hash: BigInt("-4156887774564"),
     })
   );
 
 
-  console.log(kicked.participants[0]); // prints the result
+  console.log(kicked.participants.length); // prints the result
 
 
-  for (let i = 0; i < 100; i++) {
+  totalParticipants = kicked.participants.length;
 
-    await client.invoke(
-      new Api.channels.EditBanned({
-        channel: "-1001539705455",
-        participant: kicked.participants[i].peer.userId,
-        bannedRights: new Api.ChatBannedRights({
-          untilDate: 2147483647,
-          viewMessages: false,
-          sendMessages: false,
-          sendMedia: false,
-          sendStickers: false,
-          sendGifs: false,
-          sendGames: false,
-          sendInline: false,
-          sendPolls: false,
-          changeInfo: false,
-          inviteUsers: false,
-          pinMessages: false,
-        }),
-      })
-    );
-
-    console.log(kicked.participants[i].peer.userId, " --- ", i);
-
+  for(i=0;i<totalParticipants;i++){
+    userIds[i]=kicked.participants[i].peer.userId;
   }
+
+
+  const interval = setInterval(async() => {
+
+    for (let i = 0; i < 5; i++,n++) {
+
+      if(totalParticipants<=n){
+
+        clearInterval(interval);
+        console.log('Finished.');
+    
+      }
+
+      let currentUserId = userIds[n];
+
+       await client.invoke(
+        new Api.channels.EditBanned({
+          channel: process.env.GROUPID,
+          participant: currentUserId,
+          bannedRights: new Api.ChatBannedRights({
+            untilDate: 2147483647,
+            viewMessages: false,
+            sendMessages: false,
+            sendMedia: false,
+            sendStickers: false,
+            sendGifs: false,
+            sendGames: false,
+            sendInline: false,
+            sendPolls: false,
+            changeInfo: false,
+            inviteUsers: false,
+            pinMessages: false,
+          }),
+        })
+      );
+  
+      console.log(kicked.participants[n].peer.userId, " --- ", n,"--- Unbanned");
+      
+    }
+    
+  }, 5000);
+
+ 
 
 })();
