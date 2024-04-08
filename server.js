@@ -60,6 +60,8 @@ cron.schedule('*/20 * * * *', () => {
         if (totalParticipants <= n) {
           console.log('Finished.');
           clearInterval(interval);
+          break;
+
         }
 
         let currentUserId = userIds[n];
