@@ -5,7 +5,7 @@ const cron = require('node-cron');
 require('dotenv').config();
 
 
-let round=1;
+let round = 1;
 let totalParticipants;
 let n = 0;
 let userIds = [];
@@ -46,52 +46,46 @@ cron.schedule('*/20 * * * *', () => {
 
     console.log(kicked.participants.length); // prints the result
 
-
     totalParticipants = kicked.participants.length;
 
     for (i = 0; i < totalParticipants; i++) {
       userIds[i] = kicked.participants[i].peer.userId;
     }
 
-    const interval = setInterval(async () => {
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-      for (let i = 0; i < 5; i++, n++) {
+    for (let i = 0; i < 200; i++,n++) {
 
-        if (totalParticipants <= n) {
-          console.log('Finished.');
-          clearInterval(interval);
-          break;
-
-        }
-
-        let currentUserId = userIds[n];
-
-        await client.invoke(
-          new Api.channels.EditBanned({
-            channel: process.env.GROUPID,
-            participant: currentUserId,
-            bannedRights: new Api.ChatBannedRights({
-              untilDate: 2147483647,
-              viewMessages: false,
-              sendMessages: false,
-              sendMedia: false,
-              sendStickers: false,
-              sendGifs: false,
-              sendGames: false,
-              sendInline: false,
-              sendPolls: false,
-              changeInfo: false,
-              inviteUsers: false,
-              pinMessages: false,
-            }),
-          })
-        );
-
-        console.log(kicked.participants[n].peer.userId, " --- ", n, "--- Unbanned");
-
+      if(n%5==0){
+        await sleep(3000)
       }
 
-    }, 5000);
+      let currentUserId = userIds[i];
+
+      await client.invoke(
+        new Api.channels.EditBanned({
+          channel: process.env.GROUPID,
+          participant: currentUserId,
+          bannedRights: new Api.ChatBannedRights({
+            untilDate: 2147483647,
+            viewMessages: false,
+            sendMessages: false,
+            sendMedia: false,
+            sendStickers: false,
+            sendGifs: false,
+            sendGames: false,
+            sendInline: false,
+            sendPolls: false,
+            changeInfo: false,
+            inviteUsers: false,
+            pinMessages: false,
+          }),
+        })
+      );
+
+      console.log(kicked.participants[i].peer.userId, " --- ", i, "--- Unbanned");
+
+    }
 
   })();
 
